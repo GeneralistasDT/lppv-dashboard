@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LPPV - Dashboard Agente</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .search-section {
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .search-section input {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-section input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-refresh {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .alumnos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .alumno-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .alumno-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+        }
+        
+        .alumno-card.selected {
+            border-color: #667eea;
+            background: #f5f7ff;
+        }
+        
+        .alumno-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .alumno-nombre {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .badge-fase1 {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        
+        .badge-fase2 {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        
+        .badge-sdb {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        
+        .badge-msf {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        
+        .badge-suma {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+        
+        .alumno-info {
+            font-size: 0.95em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .estado-container {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+        
+        .estado-titulo {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .estado-detalle {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .alert-danger {
+            color: #d32f2f;
+            font-weight: 600;
+        }
+        
+        .alert-warning {
+            color: #f57c00;
+            font-weight: 600;
+        }
+        
+        .alert-success {
+            color: #388e3c;
+            font-weight: 600;
+        }
+        
+        .actions-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 500px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.3);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        
+        .actions-panel.active {
+            transform: translateX(0);
+        }
+        
+        .actions-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .close-panel {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .actions-content {
+            padding: 25px;
+        }
+        
+        .script-section {
+            margin-bottom: 30px;
+        }
+        
+        .script-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .script-box {
+            background: #f5f5f5;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .action-buttons {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn-whatsapp {
+            background: #25D366;
+            color: white;
+        }
+        
+        .btn-email {
+            background: #EA4335;
+            color: white;
+        }
+        
+        .btn-llamada {
+            background: #4285F4;
+            color: white;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 1.2em;
+            color: #666;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .actions-panel {
+                width: 100%;
+            }
+            
+            .alumnos-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📞 Sistema LPPV</h1>
+            <p>Dashboard de Seguimiento - Agente Telefónico</p>
+        </div>
+        
+        <div class="content">
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="Buscar por nombre, teléfono o email..." />
+                <button class="btn btn-refresh" onclick="cargarAlumnos()">🔄 Actualizar</button>
+            </div>
+            
+            <div id="alumnosContainer" class="loading">
+                Cargando alumnos...
+            </div>
+        </div>
+    </div>
+    
+    <div id="actionsPanel" class="actions-panel">
+        <div class="actions-header">
+            <span class="close-panel" onclick="cerrarPanel()">×</span>
+            <h2 id="panelAlumnoNombre">Seleccione un alumno</h2>
+        </div>
+        <div class="actions-content" id="actionsContent">
+            <!-- Contenido dinámico -->
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyemfJGAqwnv3VTLIB21Zm6Bhi7PHsqlw9ByOKtp_pro7EoEggkgKWx1ZklS5LXYts5/exec';
+        
+        let alumnosData = [];
+        let alumnoSeleccionado = null;
+        
+        // Cargar alumnos al iniciar
+        window.addEventListener('DOMContentLoaded', cargarAlumnos);
+        
+        // Búsqueda en tiempo real
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', filtrarAlumnos);
+            }
+        });
+        
+        async function cargarAlumnos() {
+            const container = document.getElementById('alumnosContainer');
+            container.innerHTML = '<div class="loading">Cargando alumnos...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}?action=getAlumnos`);
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                alumnosData = data;
+                mostrarAlumnos(alumnosData);
+                
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error al cargar alumnos: ${error.message}</div>`;
+            }
+        }
+        
+        function mostrarAlumnos(alumnos) {
+            const container = document.getElementById('alumnosContainer');
+            
+            if (alumnos.length === 0) {
+                container.innerHTML = '<div class="loading">No se encontraron alumnos</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'alumnos-grid';
+            
+            alumnos.forEach(alumno => {
+                const card = crearTarjetaAlumno(alumno);
+                grid.appendChild(card);
+            });
+            
+            container.appendChild(grid);
+        }
+        
+        function crearTarjetaAlumno(alumno) {
+            const card = document.createElement('div');
+            card.className = 'alumno-card';
+            card.onclick = () => seleccionarAlumno(alumno);
+            
+            const badgeTienda = alumno.Tienda === 'SDB' ? 'badge-sdb' : 
+                               alumno.Tienda === 'MSF' ? 'badge-msf' : 'badge-suma';
+            
+            const badgeFase = alumno.FaseActual === 'Fase1' ? 'badge-fase1' : 'badge-fase2';
+            
+            card.innerHTML = `
+                <div class="alumno-header">
+                    <div class="alumno-nombre">${alumno.Nombre}</div>
+                    <span class="badge ${badgeTienda}">${alumno.Tienda}</span>
+                </div>
+                <div class="alumno-info">📱 ${alumno.Telefono}</div>
+                <div class="alumno-info">📧 ${alumno.Email}</div>
+                <div class="alumno-info">
+                    <span class="badge ${badgeFase}">${alumno.FaseActual}</span>
+                    <span class="badge" style="background: #eeeeee; color: #333;">${alumno.Generacion}</span>
+                </div>
+                <div id="estado-${alumno.ID}" class="estado-container">
+                    <div class="loading" style="padding: 10px;">Cargando estado...</div>
+                </div>
+            `;
+            
+            // Cargar estado del alumno
+            cargarEstadoAlumno(alumno);
+            
+            return card;
+        }
+        
+        async function cargarEstadoAlumno(alumno) {
+            const estadoDiv = document.getElementById(`estado-${alumno.ID}`);
+            
+            try {
+                if (alumno.FaseActual === 'Fase1') {
+                    const response = await fetch(`${API_URL}?action=getFase1&alumnoID=${alumno.ID}`);
+                    const data = await response.json();
+                    
+                    if (data) {
+                        const cursosRestantes = 17 - data.cursosVistos;
+                        const tareasRestantes = 17 - data.tareasEnviadas;
+                        
+                        let alertClass = 'alert-success';
+                        if (cursosRestantes > 5 || tareasRestantes > 5) alertClass = 'alert-danger';
+                        else if (cursosRestantes > 0 || tareasRestantes > 0) alertClass = 'alert-warning';
+                        
+                        estadoDiv.innerHTML = `
+                            <div class="estado-titulo">Estado Fase 1:</div>
+                            <div class="estado-detalle ${alertClass}">
+                                📚 Cursos: ${data.cursosVistos}/17 (Faltan ${cursosRestantes})
+                            </div>
+                            <div class="estado-detalle ${alertClass}">
+                                ✍️ Tareas: ${data.tareasEnviadas}/17 (Faltan ${tareasRestantes})
+                            </div>
+                        `;
+                    } else {
+                        estadoDiv.innerHTML = '<div class="estado-detalle">Sin datos de avance</div>';
+                    }
+                } else {
+                    const response = await fetch(`${API_URL}?action=getFase2&alumnoID=${alumno.ID}`);
+                    const cursos = await response.json();
+                    
+                    if (cursos && cursos.length > 0) {
+                        const reprobados = cursos.filter(c => c.estado === 'Reprobado').length;
+                        
+                        let alertClass = reprobados === 0 ? 'alert-success' : 
+                                        reprobados <= 2 ? 'alert-warning' : 'alert-danger';
+                        
+                        estadoDiv.innerHTML = `
+                            <div class="estado-titulo">Estado Fase 2:</div>
+                            <div class="estado-detalle ${alertClass}">
+                                📊 Total cursos: ${cursos.length}
+                            </div>
+                            <div class="estado-detalle ${alertClass}">
+                                ❌ Reprobados: ${reprobados}
+                            </div>
+                        `;
+                    } else {
+                        estadoDiv.innerHTML = '<div class="estado-detalle">Sin datos de cursos</div>';
+                    }
+                }
+            } catch (error) {
+                estadoDiv.innerHTML = '<div class="estado-detalle">Error al cargar estado</div>';
+            }
+        }
+        
+        async function seleccionarAlumno(alumno) {
+            alumnoSeleccionado = alumno;
+            
+            // Marcar tarjeta seleccionada
+            document.querySelectorAll('.alumno-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // Mostrar panel
+            document.getElementById('panelAlumnoNombre').textContent = alumno.Nombre;
+            
+            const actionsContent = document.getElementById('actionsContent');
+            actionsContent.innerHTML = '<div class="loading">Cargando scripts...</div>';
+            
+            document.getElementById('actionsPanel').classList.add('active');
+            
+            // Cargar scripts según fase
+            if (alumno.FaseActual === 'Fase1') {
+                await cargarScriptsFase1(alumno);
+            } else {
+                await cargarScriptsFase2(alumno);
+            }
+        }
+        
+        async function cargarScriptsFase1(alumno) {
+            const response = await fetch(`${API_URL}?action=getFase1&alumnoID=${alumno.ID}`);
+            const avance = await response.json();
+            
+            if (!avance) {
+                document.getElementById('actionsContent').innerHTML = '<div class="error">No hay datos de Fase 1</div>';
+                return;
+            }
+            
+            const cursosRestantes = 17 - avance.cursosVistos;
+            const tareasRestantes = 17 - avance.tareasEnviadas;
+            
+            let scriptSeleccionado = '';
+            let scriptTipo = '';
+            
+            if (cursosRestantes > 10 || tareasRestantes > 10) {
+                scriptTipo = 'Fase1_Alto_Rezago';
+                scriptSeleccionado = generarScriptFase1(alumno, avance, 'alto');
+            } else if (cursosRestantes > 5 || tareasRestantes > 5) {
+                scriptTipo = 'Fase1_Medio_Rezago';
+                scriptSeleccionado = generarScriptFase1(alumno, avance, 'medio');
+            } else {
+                scriptTipo = 'Fase1_Bajo_Rezago';
+                scriptSeleccionado = generarScriptFase1(alumno, avance, 'bajo');
+            }
+            
+            mostrarPanelAcciones(alumno, scriptSeleccionado, scriptTipo);
+        }
+        
+        async function cargarScriptsFase2(alumno) {
+            const response = await fetch(`${API_URL}?action=getFase2&alumnoID=${alumno.ID}`);
+            const cursos = await response.json();
+            
+            if (!cursos || cursos.length === 0) {
+                document.getElementById('actionsContent').innerHTML = '<div class="error">No hay datos de Fase 2</div>';
+                return;
+            }
+            
+            const cursosReprobados = cursos.filter(c => c.estado === 'Reprobado');
+            const numReprobados = cursosReprobados.length;
+            
+            let scriptSeleccionado = '';
+            let scriptTipo = '';
+            
+            if (numReprobados === 1) {
+                scriptTipo = 'Fase2_1_Reprobado';
+                scriptSeleccionado = generarScriptFase2_1(alumno, cursosReprobados);
+            } else if (numReprobados === 2) {
+                scriptTipo = 'Fase2_2_Reprobados';
+                scriptSeleccionado = generarScriptFase2_2(alumno, cursosReprobados);
+            } else if (numReprobados >= 3) {
+                scriptTipo = 'Fase2_3_o_Mas';
+                scriptSeleccionado = generarScriptFase2_3(alumno, cursosReprobados);
+            } else {
+                scriptTipo = 'Fase2_Al_Dia';
+                scriptSeleccionado = `${alumno.Nombre} está al día en todos los cursos. ¡Excelente trabajo! 🎉`;
+            }
+            
+            mostrarPanelAcciones(alumno, scriptSeleccionado, scriptTipo);
+        }
+        
+        function generarScriptFase1(alumno, avance, nivel) {
+            const cursosRestantes = 17 - avance.cursosVistos;
+            const tareasRestantes = 17 - avance.tareasEnviadas;
+            
+            if (nivel === 'alto') {
+                return `¡Hola ${alumno.Nombre}! Buen día, te habla [Tu Nombre] del equipo de Líder por Primera Vez.
+
+Te llamo para informarte sobre tu avance en la Fase 1 - Crehana.
+
+Estado actual:
+📚 Cursos vistos: ${avance.cursosVistos}/17 (Faltan ${cursosRestantes})
+✍️ Tareas enviadas: ${avance.tareasEnviadas}/17 (Faltan ${tareasRestantes})
+
+Es fundamental que aceleres tu ritmo para completar esta fase. Recuerda que tienes 1 mes para ver los 17 cursos y enviar las 17 tareas.
+
+Te recomiendo dedicar al menos 2 horas diarias para ponerte al día.
+
+Si tienes dudas, puedes comunicarte con Cristian Cordón al 3766 4077.
+
+¡Adelante, tú puedes!`;
+            } else if (nivel === 'medio') {
+                return `Hola ${alumno.Nombre}, te habla [Tu Nombre] del programa Líder por Primera Vez.
+
+Te contacto para darte seguimiento a tu avance en Crehana.
+
+Actualmente llevas:
+📚 ${avance.cursosVistos}/17 cursos vistos
+✍️ ${avance.tareasEnviadas}/17 tareas enviadas
+
+Vas bien, pero es importante mantener el ritmo. Te quedan ${cursosRestantes} cursos y ${tareasRestantes} tareas por completar.
+
+Si necesitas apoyo, contacta a Cristian Cordón al 3766 4077.
+
+¡Sigue así!`;
+            } else {
+                return `¡Hola ${alumno.Nombre}!
+
+Solo quería felicitarte por tu excelente avance en Crehana:
+📚 ${avance.cursosVistos}/17 cursos
+✍️ ${avance.tareasEnviadas}/17 tareas
+
+Estás muy cerca de completar la Fase 1. ¡Sigue con ese ánimo!
+
+Cualquier duda, contacta a Cristian Cordón al 3766 4077.`;
+            }
+        }
+        
+        function generarScriptFase2_1(alumno, cursosReprobados) {
+            const curso = cursosReprobados[0];
+            return `¡Hola ${alumno.Nombre}! Buen día, te habla [Tu Nombre] del equipo de Líder por Primera Vez.
+
+Te llamo para informarte que el curso de ${curso.curso} está reprobado.
+
+Este curso es fundamental para tu desarrollo como líder. Es necesario que lo recuperes pronto para continuar en el programa.
+
+Si tienes dudas, puedes comunicarte con Cristian Cordón al 3766 4077.
+
+¡Éxito!`;
+        }
+        
+        function generarScriptFase2_2(alumno, cursosReprobados) {
+            const listaCursos = cursosReprobados.map(c => c.curso).join(' y ');
+            return `Hola ${alumno.Nombre}, te habla [Tu Nombre] del programa Líder por Primera Vez.
+
+Te informo que actualmente tienes dos cursos reprobados: ${listaCursos}.
+
+Esta situación compromete tu continuidad en el programa. Es necesario que completes estos módulos lo antes posible para evitar consecuencias mayores.
+
+Si necesitas apoyo, comunícate con Cristian Cordón al 3766 4077.
+
+Contamos con tu compromiso.`;
+        }
+        
+        function generarScriptFase2_3(alumno, cursosReprobados) {
+            const listaCursos = cursosReprobados.map(c => c.curso).join(', ');
+            return `${alumno.Nombre}, buenos días, soy [Tu Nombre] del programa Líder por Primera Vez.
+
+Te llamo para informarte que actualmente tienes ${cursosReprobados.length} cursos reprobados: ${listaCursos}.
+
+Esta situación es seria y pone en riesgo tu permanencia en el programa. Se requiere acción inmediata.
+
+Es importante que tomes esta situación con la seriedad que requiere y actúes de inmediato.
+
+Para dudas, contacta a Cristian Cordón al 3766 4077.`;
+        }
+        
+        function mostrarPanelAcciones(alumno, script, scriptTipo) {
+            const actionsContent = document.getElementById('actionsContent');
+            
+            actionsContent.innerHTML = `
+                <div class="script-section">
+                    <div class="script-title">📝 Script Sugerido:</div>
+                    <div class="script-box">${script}</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-whatsapp" onclick="enviarWhatsApp('${alumno.Telefono}', \`${script.replace(/`/g, '\\`')}\`, '${scriptTipo}')">
+                        💬 Abrir WhatsApp
+                    </button>
+                    <button class="btn btn-email" onclick="enviarEmail('${alumno.Email}', '${alumno.Nombre}', \`${script.replace(/`/g, '\\`')}\`, '${scriptTipo}')">
+                        ✉️ Abrir Email
+                    </button>
+                    <button class="btn btn-llamada" onclick="registrarLlamada('${alumno.ID}', '${scriptTipo}')">
+                        📞 Registrar Llamada
+                    </button>
+                </div>
+            `;
+        }
+        
+        function enviarWhatsApp(telefono, script, scriptTipo) {
+            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(script)}`;
+            window.open(url, '_blank');
+            registrarAccion(alumnoSeleccionado.ID, 'WhatsApp', scriptTipo);
+        }
+        
+        function enviarEmail(email, nombre, script, scriptTipo) {
+            const asunto = `Importante: Tu avance en Líder por Primera Vez`;
+            const cuerpo = `Estimado/a ${nombre}:
+
+${script}
+
+Saludos cordiales,
+
+[Tu Nombre]
+[Tu Cargo]
+Programa Líder por Primera Vez`;
+            
+            const url = `mailto:${email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+            window.location.href = url;
+            registrarAccion(alumnoSeleccionado.ID, 'Email', scriptTipo);
+        }
+        
+        function registrarLlamada(alumnoID, scriptTipo) {
+            const observaciones = prompt('¿Observaciones de la llamada? (opcional)');
+            registrarAccion(alumnoID, 'Llamada', scriptTipo, observaciones || '');
+        }
+        
+        async function registrarAccion(alumnoID, tipoContacto, scriptUsado, observaciones = '') {
+            try {
+                const fase = alumnoSeleccionado.FaseActual;
+                const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+                
+                const data = {
+                    alumnoID: alumnoID,
+                    fase: fase,
+                    tipoContacto: tipoContacto,
+                    scriptUsado: scriptUsado,
+                    observaciones: observaciones,
+                    agenteNombre: agenteNombre
+                };
+                
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                
+                alert(`✅ ${tipoContacto} registrado correctamente`);
+                
+            } catch (error) {
+                alert('Error al registrar: ' + error.message);
+            }
+        }
+        
+        function cerrarPanel() {
+            document.getElementById('actionsPanel').classList.remove('active');
+        }
+        
+        function filtrarAlumnos() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            const filtrados = alumnosData.filter(alumno => {
+                return alumno.Nombre.toLowerCase().includes(searchTerm) ||
+                       alumno.Telefono.includes(searchTerm) ||
+                       alumno.Email.toLowerCase().includes(searchTerm);
+            });
+            
+            mostrarAlumnos(filtrados);
+        }
+    </script>
+</body>
+</html>
