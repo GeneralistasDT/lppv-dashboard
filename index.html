@@ -681,10 +681,17 @@ Para dudas, contacta a Cristian Cordón al 3766 4077.`;
             `;
         }
         
-        function enviarWhatsApp(telefono, script, scriptTipo) {
-            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(script)}`;
-            window.open(url, '_blank');
-            registrarAccion(alumnoSeleccionado.ID, 'WhatsApp', scriptTipo);
+function enviarWhatsApp(telefono, script, scriptTipo) {
+    // Reducir saltos de línea para WhatsApp
+    const scriptLimpio = script.replace(/\n\n\n/g, '\n\n').replace(/\n\n/g, '\n');
+    
+    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(scriptLimpio)}`;
+    window.open(url, '_blank');
+    
+    // Pedir nombre de agente para registrar
+    const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+    registrarAccion(alumnoSeleccionado.ID, 'WhatsApp', scriptTipo, '', agenteNombre);
+}
         }
         
         function enviarEmail(email, nombre, script, scriptTipo) {
@@ -709,31 +716,35 @@ Programa Líder por Primera Vez`;
             registrarAccion(alumnoID, 'Llamada', scriptTipo, observaciones || '');
         }
         
-        async function registrarAccion(alumnoID, tipoContacto, scriptUsado, observaciones = '') {
-            try {
-                const fase = alumnoSeleccionado.FaseActual;
-                const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
-                
-                const data = {
-                    alumnoID: alumnoID,
-                    fase: fase,
-                    tipoContacto: tipoContacto,
-                    scriptUsado: scriptUsado,
-                    observaciones: observaciones,
-                    agenteNombre: agenteNombre
-                };
-                
-                await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
-                
-                alert(`✅ ${tipoContacto} registrado correctamente`);
-                
-            } catch (error) {
-                alert('Error al registrar: ' + error.message);
-            }
+async function registrarAccion(alumnoID, tipoContacto, scriptUsado, observaciones = '', agenteNombre = null) {
+    try {
+        const fase = alumnoSeleccionado.FaseActual;
+        
+        // Si no viene nombre, preguntar
+        if (!agenteNombre) {
+            agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
         }
+        
+        const data = {
+            alumnoID: alumnoID,
+            fase: fase,
+            tipoContacto: tipoContacto,
+            scriptUsado: scriptUsado,
+            observaciones: observaciones,
+            agenteNombre: agenteNombre
+        };
+        
+        await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+        
+        alert(`✅ ${tipoContacto} registrado correctamente`);
+        
+    } catch (error) {
+        alert('Error al registrar: ' + error.message);
+    }
+}
         
         function cerrarPanel() {
             document.getElementById('actionsPanel').classList.remove('active');
