@@ -423,9 +423,9 @@
                     <div class="loading" style="padding: 10px;">Cargando estado...</div>
                 </div>
             `;
-            
-            // Cargar estado del alumno
-            cargarEstadoAlumno(alumno);
+                        
+            // Cargar estado del alumno después de que esté en el DOM
+setTimeout(() => cargarEstadoAlumno(alumno), 100);
             
             return card;
         }
