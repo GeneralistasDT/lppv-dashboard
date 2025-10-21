@@ -423,9 +423,9 @@
                     <div class="loading" style="padding: 10px;">Cargando estado...</div>
                 </div>
             `;
-                        
-            // Cargar estado del alumno después de que esté en el DOM
-setTimeout(() => cargarEstadoAlumno(alumno), 100);
+            
+            // Cargar estado del alumno
+            setTimeout(() => cargarEstadoAlumno(alumno), 100);
             
             return card;
         }
@@ -433,14 +433,19 @@ setTimeout(() => cargarEstadoAlumno(alumno), 100);
         async function cargarEstadoAlumno(alumno) {
             const estadoDiv = document.getElementById(`estado-${alumno.ID}`);
             
+            if (!estadoDiv) {
+                console.error(`No se encontró elemento estado-${alumno.ID}`);
+                return;
+            }
+            
             try {
                 if (alumno.FaseActual === 'Fase1') {
                     const response = await fetch(`${API_URL}?action=getFase1&alumnoID=${alumno.ID}`);
                     const data = await response.json();
                     
-                    if (data) {
-                        const cursosRestantes = 17 - data.cursosVistos;
-                        const tareasRestantes = 17 - data.tareasEnviadas;
+                    if (data && !data.error) {
+                        const cursosRestantes = 17 - (data.cursosVistos || 0);
+                        const tareasRestantes = 17 - (data.tareasEnviadas || 0);
                         
                         let alertClass = 'alert-success';
                         if (cursosRestantes > 5 || tareasRestantes > 5) alertClass = 'alert-danger';
@@ -449,10 +454,10 @@ setTimeout(() => cargarEstadoAlumno(alumno), 100);
                         estadoDiv.innerHTML = `
                             <div class="estado-titulo">Estado Fase 1:</div>
                             <div class="estado-detalle ${alertClass}">
-                                📚 Cursos: ${data.cursosVistos}/17 (Faltan ${cursosRestantes})
+                                📚 Cursos: ${data.cursosVistos || 0}/17 (Faltan ${cursosRestantes})
                             </div>
                             <div class="estado-detalle ${alertClass}">
-                                ✍️ Tareas: ${data.tareasEnviadas}/17 (Faltan ${tareasRestantes})
+                                ✍️ Tareas: ${data.tareasEnviadas || 0}/17 (Faltan ${tareasRestantes})
                             </div>
                         `;
                     } else {
@@ -462,7 +467,7 @@ setTimeout(() => cargarEstadoAlumno(alumno), 100);
                     const response = await fetch(`${API_URL}?action=getFase2&alumnoID=${alumno.ID}`);
                     const cursos = await response.json();
                     
-                    if (cursos && cursos.length > 0) {
+                    if (cursos && cursos.length > 0 && !cursos.error) {
                         const reprobados = cursos.filter(c => c.estado === 'Reprobado').length;
                         
                         let alertClass = reprobados === 0 ? 'alert-success' : 
@@ -482,6 +487,7 @@ setTimeout(() => cargarEstadoAlumno(alumno), 100);
                     }
                 }
             } catch (error) {
+                console.error('Error cargando estado:', error);
                 estadoDiv.innerHTML = '<div class="estado-detalle">Error al cargar estado</div>';
             }
         }
@@ -661,6 +667,8 @@ Para dudas, contacta a Cristian Cordón al 3766 4077.`;
         function mostrarPanelAcciones(alumno, script, scriptTipo) {
             const actionsContent = document.getElementById('actionsContent');
             
+            const scriptEscapado = script.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+            
             actionsContent.innerHTML = `
                 <div class="script-section">
                     <div class="script-title">📝 Script Sugerido:</div>
@@ -668,10 +676,10 @@ Para dudas, contacta a Cristian Cordón al 3766 4077.`;
                 </div>
                 
                 <div class="action-buttons">
-                    <button class="btn btn-whatsapp" onclick="enviarWhatsApp('${alumno.Telefono}', \`${script.replace(/`/g, '\\`')}\`, '${scriptTipo}')">
+                    <button class="btn btn-whatsapp" onclick="enviarWhatsApp('${alumno.Telefono}', \`${scriptEscapado}\`, '${scriptTipo}')">
                         💬 Abrir WhatsApp
                     </button>
-                    <button class="btn btn-email" onclick="enviarEmail('${alumno.Email}', '${alumno.Nombre}', \`${script.replace(/`/g, '\\`')}\`, '${scriptTipo}')">
+                    <button class="btn btn-email" onclick="enviarEmail('${alumno.Email}', '${alumno.Nombre}', \`${scriptEscapado}\`, '${scriptTipo}')">
                         ✉️ Abrir Email
                     </button>
                     <button class="btn btn-llamada" onclick="registrarLlamada('${alumno.ID}', '${scriptTipo}')">
@@ -681,17 +689,16 @@ Para dudas, contacta a Cristian Cordón al 3766 4077.`;
             `;
         }
         
-function enviarWhatsApp(telefono, script, scriptTipo) {
-    // Reducir saltos de línea para WhatsApp
-    const scriptLimpio = script.replace(/\n\n\n/g, '\n\n').replace(/\n\n/g, '\n');
-    
-    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(scriptLimpio)}`;
-    window.open(url, '_blank');
-    
-    // Pedir nombre de agente para registrar
-    const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
-    registrarAccion(alumnoSeleccionado.ID, 'WhatsApp', scriptTipo, '', agenteNombre);
-}
+        function enviarWhatsApp(telefono, script, scriptTipo) {
+            // Reducir saltos de línea para WhatsApp
+            const scriptLimpio = script.replace(/\n\n\n/g, '\n\n').replace(/\n\n/g, '\n');
+            
+            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(scriptLimpio)}`;
+            window.open(url, '_blank');
+            
+            // Pedir nombre de agente para registrar
+            const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+            registrarAccion(alumnoSeleccionado.ID, 'WhatsApp', scriptTipo, '', agenteNombre);
         }
         
         function enviarEmail(email, nombre, script, scriptTipo) {
@@ -708,43 +715,47 @@ Programa Líder por Primera Vez`;
             
             const url = `mailto:${email}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
             window.location.href = url;
-            registrarAccion(alumnoSeleccionado.ID, 'Email', scriptTipo);
+            
+            // Pedir nombre de agente
+            const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+            registrarAccion(alumnoSeleccionado.ID, 'Email', scriptTipo, '', agenteNombre);
         }
         
         function registrarLlamada(alumnoID, scriptTipo) {
             const observaciones = prompt('¿Observaciones de la llamada? (opcional)');
-            registrarAccion(alumnoID, 'Llamada', scriptTipo, observaciones || '');
+            const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+            registrarAccion(alumnoID, 'Llamada', scriptTipo, observaciones || '', agenteNombre);
         }
         
-async function registrarAccion(alumnoID, tipoContacto, scriptUsado, observaciones = '', agenteNombre = null) {
-    try {
-        const fase = alumnoSeleccionado.FaseActual;
-        
-        // Si no viene nombre, preguntar
-        if (!agenteNombre) {
-            agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+        async function registrarAccion(alumnoID, tipoContacto, scriptUsado, observaciones, agenteNombre) {
+            try {
+                const fase = alumnoSeleccionado.FaseActual;
+                
+                // Si no viene nombre, preguntar
+                if (!agenteNombre) {
+                    agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+                }
+                
+                const data = {
+                    alumnoID: alumnoID,
+                    fase: fase,
+                    tipoContacto: tipoContacto,
+                    scriptUsado: scriptUsado,
+                    observaciones: observaciones,
+                    agenteNombre: agenteNombre
+                };
+                
+                await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                
+                alert(`✅ ${tipoContacto} registrado correctamente`);
+                
+            } catch (error) {
+                alert('Error al registrar: ' + error.message);
+            }
         }
-        
-        const data = {
-            alumnoID: alumnoID,
-            fase: fase,
-            tipoContacto: tipoContacto,
-            scriptUsado: scriptUsado,
-            observaciones: observaciones,
-            agenteNombre: agenteNombre
-        };
-        
-        await fetch(API_URL, {
-            method: 'POST',
-            body: JSON.stringify(data)
-        });
-        
-        alert(`✅ ${tipoContacto} registrado correctamente`);
-        
-    } catch (error) {
-        alert('Error al registrar: ' + error.message);
-    }
-}
         
         function cerrarPanel() {
             document.getElementById('actionsPanel').classList.remove('active');
@@ -755,7 +766,7 @@ async function registrarAccion(alumnoID, tipoContacto, scriptUsado, observacione
             
             const filtrados = alumnosData.filter(alumno => {
                 return alumno.Nombre.toLowerCase().includes(searchTerm) ||
-                       alumno.Telefono.includes(searchTerm) ||
+                       alumno.Telefono.toString().includes(searchTerm) ||
                        alumno.Email.toLowerCase().includes(searchTerm);
             });
             
