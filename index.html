@@ -664,30 +664,30 @@ Es importante que tomes esta situación con la seriedad que requiere y actúes d
 Para dudas, contacta a Cristian Cordón al 3766 4077.`;
         }
         
-        function mostrarPanelAcciones(alumno, script, scriptTipo) {
-            const actionsContent = document.getElementById('actionsContent');
-            
-            const scriptEscapado = script.replace(/`/g, '\\`').replace(/\$/g, '\\$');
-            
-            actionsContent.innerHTML = `
-                <div class="script-section">
-                    <div class="script-title">📝 Script Sugerido:</div>
-                    <div class="script-box">${script}</div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn btn-whatsapp" onclick="enviarWhatsApp('${alumno.Telefono}', \`${scriptEscapado}\`, '${scriptTipo}')">
-                        💬 Abrir WhatsApp
-                    </button>
-                    <button class="btn btn-email" onclick="enviarEmail('${alumno.Email}', '${alumno.Nombre}', \`${scriptEscapado}\`, '${scriptTipo}')">
-                        ✉️ Abrir Email
-                    </button>
-                    <button class="btn btn-llamada" onclick="registrarLlamada('${alumno.ID}', '${scriptTipo}')">
-                        📞 Registrar Llamada
-                    </button>
-                </div>
-            `;
-        }
+function mostrarPanelAcciones(alumno, script, scriptTipo) {
+    const actionsContent = document.getElementById('actionsContent');
+    
+    const scriptEscapado = script.replace(/`/g, '\\`').replace(/\$/g, '\\$');
+    
+    actionsContent.innerHTML = `
+        <div class="script-section">
+            <div class="script-title">📝 Script Sugerido:</div>
+            <div class="script-box">${script}</div>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="btn btn-whatsapp" onclick="enviarWhatsApp('${alumno.Telefono}', \`${scriptEscapado}\`, '${scriptTipo}')">
+                💬 Abrir WhatsApp
+            </button>
+            <button class="btn btn-email" onclick="enviarEmail('${alumno.Email}', '${alumno.Nombre}', \`${scriptEscapado}\`, '${scriptTipo}')">
+                ✉️ Abrir Email
+            </button>
+            <button class="btn btn-llamada" onclick="registrarLlamada('${alumno.ID}', '${scriptTipo}')">
+                📞 Registrar Llamada
+            </button>
+        </div>
+    `;
+}
         
 function enviarWhatsApp(telefono, script, scriptTipo) {
     // Reducir saltos de línea para WhatsApp
