@@ -690,14 +690,16 @@ Para dudas, contacta a Cristian Cordón al 3766 4077.`;
         }
         
         function enviarWhatsApp(telefono, script, scriptTipo) {
+            // PRIMERO pedir nombre de agente
+            const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+            
             // Reducir saltos de línea para WhatsApp
             const scriptLimpio = script.replace(/\n\n\n/g, '\n\n').replace(/\n\n/g, '\n');
             
             const url = `https://wa.me/${telefono}?text=${encodeURIComponent(scriptLimpio)}`;
             window.open(url, '_blank');
             
-            // Pedir nombre de agente para registrar
-            const agenteNombre = prompt('Tu nombre:', 'Agente') || 'Agente';
+            // Registrar después de abrir WhatsApp
             registrarAccion(alumnoSeleccionado.ID, 'WhatsApp', scriptTipo, '', agenteNombre);
         }
         
